@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>黑名单联系人</title>
+    <!-- 引入 Google Fonts 和 FontAwesome 图标库 -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="static/css/styles.css"> <!-- 引用外部CSS -->
+</head>
+<body>
+    <!-- 添加烟花动画的 canvas -->
+    <canvas id="fireworksCanvas"></canvas>
+    <h1>黑名单联系人</h1>
+
+    <!-- 返回按钮 -->
+    <button onclick="window.location.href='index.html'"><i class="fas fa-arrow-left"></i> 返回通讯录</button>
+
+    <!-- 黑名单表格 -->
+    <table>
+        <thead>
+            <tr>
+                <th>姓名</th>
+                <th>电话</th>
+                <th>学号</th>
+                <th>邮箱</th>
+                <th>地址</th>
+                <th>昵称</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="blacklist-list">
+
+            <!-- 黑名单联系人列表将由 JavaScript 动态填充 -->
+        </tbody>
+    </table>
+    <script src="static/js/fireworks.js"></script> <!-- 引入烟花效果的脚本 -->
+    <script src="static/js/scripts.js"></script> <!-- 引用外部JS -->
+</body>
+</html>
