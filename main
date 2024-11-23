@@ -19,6 +19,76 @@ class PhoneNumber(db.Model):
     contact_id = db.Column(db.Integer, db.ForeignKey('contact.id'), nullable=False)
     number = db.Column(db.String(20), nullable=False)
 
+@app.route('/export_contacts', methods=['GET'])
+def export_contacts():
+    contacts = Contact.query.all()
+
+    # 构建数据
+    data = []
+    for contact in contacts:
+        phones = PhoneNumber.query.filter_by(contact_id=contact.id).all()
+        phone_numbers = ', '.join([phone.number for phone in phones])  # 多个电话合并成字符串
+        data.append({
+            "姓名": contact.name,
+            "学号": contact.student_id,
+            "邮箱": contact.email,
+            "地址": contact.address,
+            "昵称": contact.nickname,
+            "特别关心": contact.special_care,
+            "黑名单": contact.blacklist,
+            "电话号码": phone_numbers,
+        })
+
+    # 使用 pandas 创建 DataFrame
+    df = pd.DataFrame(data)
+
+    # 写入 Excel 文件
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='通讯录')
+
+    output.seek(0)
+    return send_file(output, as_attachment=True, download_name='contacts.xlsx', mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+@app.route('/import_contacts', methods=['POST'])
+def import_contacts():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    # 使用 pandas 读取 Excel 文件
+    try:
+        df = pd.read_excel(file)
+    except Exception as e:
+        return jsonify({"error": f"Failed to read Excel file: {str(e)}"}), 400
+
+    # 处理每一行
+    for _, row in df.iterrows():
+        contact = Contact(
+            name=row.get('姓名'),
+            student_id=row.get('学号'),
+            email=row.get('邮箱'),
+            address=row.get('地址'),
+            nickname=row.get('昵称'),
+            special_care=bool(row.get('特别关心', False)),
+            blacklist=bool(row.get('黑名单', False)),
+        )
+        db.session.add(contact)
+        db.session.commit()
+
+        # 添加电话号码
+        if '电话号码' in row:
+            phone_numbers = str(row['电话号码']).split(',')  # 用逗号分隔电话号码
+            for phone in phone_numbers:
+                phone_record = PhoneNumber(contact_id=contact.id, number=phone.strip())
+                db.session.add(phone_record)
+
+    db.session.commit()
+    return jsonify({"message": "Contacts imported successfully!"}), 200
+
 @app.route('/update_phone/<int:contact_id>', methods=['PUT'])
 def update_phone(contact_id):
     data = request.json
@@ -209,4 +279,5 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()  # 在应用上下文中创建所有表
     app.run(host='0.0.0.0', port=5000, debug=True)
+
 
